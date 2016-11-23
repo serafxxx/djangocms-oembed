@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from cms.models import CMSPlugin
+from urllib.parse import urlparse, parse_qsl, urlencode, urlunparse
 import urllib
-import urlparse
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.safestring import mark_safe
@@ -45,10 +45,10 @@ class OembedVideoPlugin(CMSPlugin):
         extra['portrait'] = False  # Vimeo
         try:
             data = providers.request(self.oembed_url, **extra)
-        except ProviderNotFoundException, e:
-            raise ValidationError(e.message)
-        except ProviderException, e:
-            raise ValidationError(e.message)
+        except ProviderNotFoundException as e:
+            raise ValidationError(str(e))
+        except ProviderException as e:
+            raise ValidationError(str(e))
         if not data['type'] == 'video':
             raise ValidationError('This must be an url for a video. The "%(type)s" type is not supported.' % {'type': data['type']},)
         self.type = data.get('type', '')
@@ -66,11 +66,11 @@ class OembedVideoPlugin(CMSPlugin):
                 'showinfo': 0,  # YouTube
                 'hd': 1,  # YouTube
             }
-            url_parts = list(urlparse.urlparse(url))
-            query = dict(urlparse.parse_qsl(url_parts[4]))
+            url_parts = list(urlparse(url))
+            query = dict(parse_qsl(url_parts[4]))
             query.update(params)
-            url_parts[4] = urllib.urlencode(query)
-            new_url = mark_safe(urlparse.urlunparse(url_parts))
+            url_parts[4] = urlencode(query)
+            new_url = mark_safe(urlunparse(url_parts))
             aspect_ratio = float(data.get('width')) / float(data.get('height'))
             if self.width and not self.height:
                 width = self.width
